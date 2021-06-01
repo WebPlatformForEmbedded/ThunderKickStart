@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <include name="thunder-remotes.xml"/>
+
+    <project name="ThunderKickStart" 
+        remote="WebPlatformForEmbedded" 
+        path="source/workspaces" 
+        revision="workspaces" 
+        clone-depth="1">
+        <copyfile src="Thunder.code-workspace" dest="Thunder.code-workspace"/>
+        <linkfile src="scripts/prepare.sh" dest="prepare.env"/>
+    </project>
+
+    <project name="Thunder" 
+        remote="RDKCentral" 
+        path="source/Thunder" 
+        revision="master" 
+        clone-depth="1">
+        <linkfile src="Tools" dest="source/Tools"/>
+    </project>
+
+    <project name="ThunderInterfaces" 
+        remote="RDKCentral" 
+        path="source/ThunderInterfaces" 
+        revision="master" 
+        clone-depth="1">
+    </project>
+
+    <project name="ThunderClientLibraries" 
+        remote="RDKCentral" 
+        path="source/ThunderClientLibraries" 
+        revision="master" 
+        clone-depth="1">
+    </project>
+    
+    <project name="ThunderNanoServices" 
+        remote="RDKCentral" 
+        path="source/ThunderNanoServices" 
+        revision="master" 
+        clone-depth="1">
+    </project>
+</manifest>

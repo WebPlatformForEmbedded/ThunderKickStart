@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <include name="thunder-remotes.xml"/>
+    <include name="thunder-core-development.xml"/>
+
+    <project name="rdkservices" 
+        remote="RDKCentral" 
+        path="source/rdkservices" 
+        revision="master" 
+        clone-depth="1">
+    </project>
+</manifest>

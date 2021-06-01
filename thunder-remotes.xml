@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <remote name="Metrological" fetch="ssh://git@github.com/metrological"/>
+    <remote name="WebPlatformForEmbedded" fetch="ssh://git@github.com/WebPlatformForEmbedded"/>
+    <remote name="RDKCentral" fetch="ssh://git@github.com/rdkcentral"/>
+    <remote name="ByBram" fetch="ssh://git@git.bybram.com/metrological"/>
+</manifest>
