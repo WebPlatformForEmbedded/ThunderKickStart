@@ -92,12 +92,15 @@
 		},
 		"git.ignoreLimitWarning": true,
 		"cmake.configureSettings": {
-			"CMAKE_INSTALL_PREFIX": "${env:THUNDER_INSTALL_ROOT}/usr",
-			"CMAKE_MODULE_PATH":"${env:THUNDER_INSTALL_ROOT}/tools",
-			"GENERIC_CMAKE_MODULE_PATH":"${env:THUNDER_INSTALL_ROOT}/tools",
-			"GENERATOR_SEARCH_PATH":"${env:THUNDER_INSTALL_ROOT}/usr/include/WPEFramework",
-			"BUILD_TYPE":"Debug",
+			"CMAKE_INSTALL_PREFIX": "${env:THUNDER_PROJECT_ROOT_LOCATION}/install/usr",
+			"CMAKE_MODULE_PATH":"${env:THUNDER_TOOLS_LOCATION}",
+			"GENERIC_CMAKE_MODULE_PATH":"${env:THUNDER_TOOLS_LOCATION}",
+			"GENERATOR_SEARCH_PATH":"${env:THUNDER_PROJECT_ROOT_LOCATION}/install/usr/include/WPEFramework",
+			"BUILD_TYPE":"${env:THUNDER_BUILD_TYPE}",
 		},
+		"cmake.buildDirectory": "${env:THUNDER_PROJECT_ROOT_LOCATION}/build/${workspaceFolderBasename}",
+		"cmake.clearOutputBeforeBuild": true,
+		"cmake.skipConfigureIfCachePresent": true,
 		"extensions": {
 			"recommendations": ["ms-vscode.cpptools-extension-pack"]
 		}
