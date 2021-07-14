@@ -5,38 +5,32 @@
     <project name="ThunderKickStart" 
         remote="WebPlatformForEmbedded" 
         path="source/workspaces" 
-        revision="workspaces" 
-        clone-depth="1">
-        <copyfile src="Thunder.code-workspace" dest="Thunder.code-workspace"/>
+        revision="workspaces">
         <linkfile src="scripts/prepare.sh" dest="prepare.env"/>
     </project>
 
     <project name="Thunder" 
         remote="RDKCentral" 
         path="source/Thunder" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
         <linkfile src="Tools" dest="source/Tools"/>
     </project>
 
     <project name="ThunderInterfaces" 
         remote="RDKCentral" 
         path="source/ThunderInterfaces" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
 
     <project name="ThunderClientLibraries" 
         remote="RDKCentral" 
         path="source/ThunderClientLibraries" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
     
     <project name="ThunderNanoServices" 
         remote="RDKCentral" 
         path="source/ThunderNanoServices" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
 </manifest>

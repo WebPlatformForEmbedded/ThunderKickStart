@@ -6,7 +6,6 @@
     <project name="rdkservices" 
         remote="RDKCentral" 
         path="source/rdkservices" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
 </manifest>

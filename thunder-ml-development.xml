@@ -6,14 +6,12 @@
     <project name="ThunderNanoServicesRDK" 
         remote="WebPlatformForEmbedded" 
         path="source/ThunderNanoServicesRDK" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
 
     <project name="WPEPluginProvisioning" 
         remote="WebPlatformForEmbedded" 
         path="source/WPEPluginProvisioning" 
-        revision="master" 
-        clone-depth="1">
+        revision="refs/heads/master">
     </project>
 </manifest>
