@@ -12,8 +12,8 @@ You need the following packets
 ``` shell
 repo init -u git@github.com:WebPlatformForEmbedded/ThunderKickStart.git -m thunder-ml-development.xml
 repo sync
-. ./prepare.env
-code Thunder.code-workspace
+./prepare.env
+code ${USER}-Thunder.code-workspace
 ```
 
 ## Update sources
