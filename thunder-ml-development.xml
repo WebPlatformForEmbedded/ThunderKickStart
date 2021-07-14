@@ -8,10 +8,4 @@
         path="source/ThunderNanoServicesRDK" 
         revision="refs/heads/master">
     </project>
-
-    <project name="WPEPluginProvisioning" 
-        remote="WebPlatformForEmbedded" 
-        path="source/WPEPluginProvisioning" 
-        revision="refs/heads/master">
-    </project>
 </manifest>
