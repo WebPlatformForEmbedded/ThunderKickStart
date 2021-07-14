@@ -33,4 +33,10 @@
         path="source/ThunderNanoServices" 
         revision="refs/heads/master">
     </project>
+    
+    <project name="ThunderUI"
+        remote="RDKCentral"
+        path="source/ThunderUI"
+        revision="refs/heads/master">
+    </project>
 </manifest>
