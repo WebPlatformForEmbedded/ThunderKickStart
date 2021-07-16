@@ -112,7 +112,7 @@ function check_env(){
   
     if [ "x$TOOLCHAIN_FILE" = "x" ]
     then
-        read -e -p "Use Toolchain File: " THUNDER_TOOLCHAIN_FILE
+        read -e -p "Use Toolchain File: " TOOLCHAIN_FILE
         TOOLCHAIN_FILE=${TOOLCHAIN_FILE:-N}
     fi
 }
