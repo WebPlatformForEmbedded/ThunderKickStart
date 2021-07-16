@@ -62,7 +62,7 @@ function parse_args(){
 function cmake-install(){
     if [[ -f $TOOLCHAIN_FILE ]]
     then
-       THUNDER_TOOLCHAIN_FILE=-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE},"
+       THUNDER_TOOLCHAIN_FILE=-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}"
     fi
    
     cmake -Hsource/$1 -Bbuild/${1///} $THUNDER_TOOLCHAIN_FILE -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${TOOLS_LOCATION} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION} &> $STDOUT
@@ -124,7 +124,7 @@ function write_workspace(){
 function write_vscode_workspace(){
     if [[ -f $TOOLCHAIN_FILE ]]
     then
-        THUNDER_TOOLCHAIN_FILE="\"CMAKE_TOOLCHAIN_FILE\":\"${TOOLCHAIN_FILE}\""
+        THUNDER_TOOLCHAIN_FILE="\"CMAKE_TOOLCHAIN_FILE\":\"${TOOLCHAIN_FILE}\","
     fi
     
     timestamp=`date +'%s'`
