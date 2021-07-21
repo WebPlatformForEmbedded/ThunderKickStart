@@ -17,20 +17,30 @@
 		"extensions": {
 			"recommendations": ["ms-vscode.cpptools-extension-pack"]
 		},
+		// If you want to use remote debugging change this to your target needs
+		"thunder.remoteTargetPublicKey":"thunder-debug-access",
+		"thunder.remoteTargetUser":"root",
+		"thunder.remoteTargetHost":"<target-ip>",
+		"thunder.remoteDebugPort":"55550",
+		// The settings below are generated change them with caution
 		"thunder.installPath":"@THUNDER_INSTALL_LOCATION@",
 		"thunder.projectRoot":"@THUNDER_PROJECT_ROOT_LOCATION@",
+		"thunder.hostToolsRoot":"@THUNDER_TOOLS_LOCATION@",
+		"thunder.stagingPath":"@THUNDER_INSTALL_LOCATION@",
+		"thunder.crossToolsPath":"@BUILD_TOOLS_LOCATION@",
+		"thunder.crossToolsPrefix":"@BUILD_TOOLS_PREFIX@",
 		"cmake.configureSettings": {
-			@THUNDER_TOOLCHAIN_FILE@
+			@THUNDER_TOOLCHAIN@
 			"CMAKE_INSTALL_PREFIX": "@THUNDER_INSTALL_LOCATION@/usr",
 			"CMAKE_MODULE_PATH":"@THUNDER_TOOLS_LOCATION@",
 			"GENERIC_CMAKE_MODULE_PATH":"@THUNDER_TOOLS_LOCATION@",
 			"GENERATOR_SEARCH_PATH":"@THUNDER_INSTALL_LOCATION@/usr/include/WPEFramework",
 			"BUILD_TYPE":"@THUNDER_BUILD_TYPE@",
-			"PERSISTENT_PATH":"@THUNDER_PROJECT_ROOT_LOCATION@/persistent",
+			"PERSISTENT_PATH":"@THUNDER_INSTALL_TARGET_PREFIX@/var/wpeframework",
 			"VOLATILE_PATH":"/tmp",
-			"DATA_PATH":"@THUNDER_INSTALL_LOCATION@/usr/share/WPEFramework",
-			"SYSTEM_PATH":"@THUNDER_INSTALL_LOCATION@/usr/lib/wpeframework/plugins",
-			"PROXYSTUB_PATH":"@THUNDER_INSTALL_LOCATION@/usr/lib/wpeframework/proxystubs"
+			"DATA_PATH":"@THUNDER_INSTALL_TARGET_PREFIX@/usr/share/WPEFramework",
+			"SYSTEM_PATH":"@THUNDER_INSTALL_TARGET_PREFIX@/usr/lib/wpeframework/plugins",
+			"PROXYSTUB_PATH":"@THUNDER_INSTALL_TARGET_PREFIX@/usr/lib/wpeframework/proxystubs"
 		},
 		"cmake.buildDirectory": "@THUNDER_PROJECT_ROOT_LOCATION@/build/${workspaceFolderBasename}",
 		"cmake.clearOutputBeforeBuild": true,
@@ -40,9 +50,9 @@
 		"C_Cpp.clang_format_fallbackStyle": "WebKit",
 		"C_Cpp.clang_format_style": "WebKit",
 		"C_Cpp.default.includePath": [
-			"@THUNDER_PROJECT_ROOT_LOCATION@/install/usr/include/",
-			"/usr/include",
-			"/usr/local/include"
+			"@THUNDER_INSTALL_LOCATION@/usr/include/",
+			"@SYS_ROOT@/usr/include",
+			"@SYS_ROOT@/usr/local/include"
 		]
 	}
 
