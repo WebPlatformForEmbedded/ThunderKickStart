@@ -8,6 +8,7 @@ function print_usage() {
     echo "options:"
     echo " -b --build <type>                 Build Type [Debug/DebugOptimized/ReleaseSymbols/Release/Production]"
     echo " -c --cmake-toolchain-file <file>  Specify toolchain file for cmake"
+    echo " -d --debug-id <ssh id>            Location of a predefined rsa key for ssh"
     echo " -i --install-location <path>      Location to install binaries"
     echo " -l --log                          Log installation to file \"install-log\""
     echo " -o --only-install                 Only pre-install predefined components"
@@ -25,6 +26,10 @@ function parse_args(){
               ;;
             -c|--cmake-toolchain-file)
               TOOLCHAIN_FILE="$2"
+              shift # past value
+              ;;
+            -d|--debug-id)
+              DEBUG_ID="$2"
               shift # past value
               ;;
             -i|--install-location)
@@ -144,7 +149,7 @@ function check_env(){
             BUILD_TOOLS_LOCATION="${USER_INPUT:-$DEFAULT}"
         fi
 
-        if [ "x$BUILD_TOOLS_PREFIX" = "x" ]
+        if [ "x$BUILD_TOOLS_PREFIX" = "xNOT_SET" ]
         then
             DEFAULT=""
             read -e -p "build tools prefix [$DEFAULT]: " -i "$BUILD_TOOLS_PREFIX" USER_INPUT
@@ -153,6 +158,13 @@ function check_env(){
     fi
 
     check_tools
+
+    if ! [ -f "$DEBUG_ID" ]
+    then
+        ssh-keygen -q -t rsa -b 4096 -C "thunder@debug.access" -N "" -f "$ROOT_LOCATION/thunder-debug-access"
+        DEBUG_ID="$ROOT_LOCATION/thunder-debug-access"
+        echo "Generated Debug SSH ID \'$ROOT_LOCATION/thunder-debug-access\'"
+    fi
 
 }
 
@@ -189,10 +201,8 @@ function check_tools {
             echo ""
         fi
     done
-set -x
-    SYS_ROOT=$(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -print-sysroot)
 
-    set +x
+    SYS_ROOT=$(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -print-sysroot)
 
     IFS='-' read -r TARGET_ARCH LEFTOVER <<< $(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -dumpmachine)
     echo "TARGET_ARCH ${TARGET_ARCH}"
@@ -201,8 +211,6 @@ set -x
 function write_workspace(){
     THUNDER_TOOLCHAIN=""
     THUNDER_INSTALL_TARGET_PREFIX=""
-
-    set -x
     
     if [[ -f $TOOLCHAIN_FILE ]]
     then
@@ -222,8 +230,6 @@ function write_workspace(){
         fi
     fi
 
-    set +x
-
     write_vscode_workspace
 }
 
@@ -242,6 +248,7 @@ function write_vscode_workspace(){
         -e "s|@BUILD_TOOLS_PREFIX@|${BUILD_TOOLS_PREFIX}|g" \
         -e "s|@BUILD_TOOLS_LOCATION@|${BUILD_TOOLS_LOCATION}|g" \
         -e "s|@SYS_ROOT@|${SYS_ROOT}|g" \
+        -e "s|@THUNDER_DEBUG_ID@|${DEBUG_ID}|g" \
         source/workspaces/Thunder.code-workspace > ${tmpws}
 
     if [[ -f ${ws} ]]
@@ -283,16 +290,33 @@ function write_cache() {
     echo "TOOLCHAIN_FILE=\"$TOOLCHAIN_FILE\"" >> .cache
     echo "BUILD_TOOLS_PREFIX=\"$BUILD_TOOLS_PREFIX\"" >> .cache
     echo "BUILD_TOOLS_LOCATION=\"$BUILD_TOOLS_LOCATION\"" >> .cache
+    echo "DEBUG_ID=\"$DEBUG_ID\"" >> .cache
 
     show_env
 }
 
+function read_cache() {
+    if [[ -f .cache ]]
+    then
+        echo "Reading cached build environment"
+        source .cache
+    fi
+}
+
 function show_env(){
-    echo "Cached build environment from .cache:"
+    read_cache
+
+    echo "Build environment:"
     echo " - Type:                  ${BUILD_TYPE}"
     echo " - Project root location: ${ROOT_LOCATION}"
     echo " - Install location       ${INSTALL_LOCATION}"
     echo " - Thunder tools:         ${TOOLS_LOCATION}"
+    if [ "x$DEBUG_ID" != "x" ]
+    then
+        echo " - Debug id:              ${DEBUG_ID}"
+        echo "   usage on target:"
+        echo "   ssh-copy-id -i  ${DEBUG_ID}.pub <user>@<target-ip>"
+    fi
     if [[ -f $TOOLCHAIN_FILE ]]
     then
     echo " - CMake toolchain file:  ${TOOLCHAIN_FILE}"
@@ -314,8 +338,9 @@ function main() {
     STDOUT="/dev/null"
     
     # Initialize variables
+    DEBUG_ID=""
     BUILD_TOOLS_LOCATION=""
-    BUILD_TOOLS_PREFIX=""
+    BUILD_TOOLS_PREFIX="NOT_SET"
     BUILD_TYPE=""
     ROOT_LOCATION=""
     INSTALL_LOCATION=""
@@ -330,11 +355,7 @@ function main() {
     	ThunderUI
     )
     
-    if [[ -f .cache ]]
-    then
-        echo "Reading cached build environment"
-        source .cache
-    fi
+    read_cache
 
     parse_args $@ && check_env && pre-install && write_workspace && write_cache
 
