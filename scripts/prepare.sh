@@ -145,14 +145,14 @@ function check_env(){
         if [ "x$BUILD_TOOLS_LOCATION" = "x" ]
         then
             DEFAULT="/usr/bin/"
-            read -e -p "toolchain build tools location [$DEFAULT]:" -i "$BUILD_TOOLS_LOCATION" USER_INPUT
+            read -e -p "toolchain build tools location [$DEFAULT]:"  USER_INPUT
             BUILD_TOOLS_LOCATION="${USER_INPUT:-$DEFAULT}"
         fi
 
         if [ "x$BUILD_TOOLS_PREFIX" = "xNOT_SET" ]
         then
             DEFAULT=""
-            read -e -p "build tools prefix [$DEFAULT]: " -i "$BUILD_TOOLS_PREFIX" USER_INPUT
+            read -e -p "build tools prefix [$DEFAULT]: "  USER_INPUT
             BUILD_TOOLS_PREFIX="${USER_INPUT:-$DEFAULT}"
         fi
     fi
