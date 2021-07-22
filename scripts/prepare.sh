@@ -3,7 +3,7 @@
 
 function print_usage() {
     echo "Usage:"
-    echo "prepare.env [options]"
+    echo "$(basename "${0}") [options]"
     echo ""
     echo "options:"
     echo " -b --build <type>                 Build Type [Debug/DebugOptimized/ReleaseSymbols/Release/Production]"
