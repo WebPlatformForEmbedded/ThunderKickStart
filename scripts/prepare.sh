@@ -68,7 +68,7 @@ function parse_args(){
 function cmake-install(){
     if [[ -f $TOOLCHAIN_FILE ]]
     then
-       THUNDER_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}"    
+       THUNDER_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}"
     elif [[ -f "${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}g++" ]] && [[ -f "${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc" ]]
     then
         THUNDER_TOOLCHAIN=' -DCMAKE_C_COMPILER="${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc"'
@@ -80,7 +80,7 @@ function cmake-install(){
             THUNDER_TOOLCHAIN+=' -DCMAKE_FIND_ROOT_PATH="${SYS_ROOT}"'
         fi
     fi
-   
+
     cmake -Hsource/$1 -Bbuild/${1///} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${TOOLS_LOCATION} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION} &> $STDOUT
     cmake --build build/${1///} --target install &> $STDOUT
 }
@@ -94,7 +94,7 @@ function pre-install(){
     	   cmake-install $c
     	fi
     done
-    
+
     if [ $INSTALL_ONLY = "Y" ]
     then
     	false
@@ -110,21 +110,21 @@ function check_env(){
         read -e -p "Set Build type [$DEFAULT]: " USER_INPUT
         BUILD_TYPE="${USER_INPUT:-$DEFAULT}"
     fi
-    
+
     if [ "x$ROOT_LOCATION" = "x" ]
     then
     	DEFAULT="${PWD}"
         read -e -p "Project root location [$DEFAULT]: " USER_INPUT
         ROOT_LOCATION="${USER_INPUT:-$DEFAULT}"
     fi
-    
+
     if [ "x$INSTALL_LOCATION" = "x" ]
     then
     	DEFAULT="${ROOT_LOCATION}/install"
         read -e -p "Thunder install location [$DEFAULT]: "  USER_INPUT
         INSTALL_LOCATION="${USER_INPUT:-$DEFAULT}"
     fi
-    
+
     if [ "x$TOOLS_LOCATION" = "x" ]
     then
     	DEFAULT=${ROOT_LOCATION}/host-tools
@@ -139,7 +139,7 @@ function check_env(){
         TOOLCHAIN_FILE="${USER_INPUT:-$DEFAULT}"
     fi
 
-    if ! [[ -f TOOLCHAIN_FILE ]]
+    if ! [[ -f $TOOLCHAIN_FILE ]]
     then
         echo "No toolchain file."
         if [ "x$BUILD_TOOLS_LOCATION" = "x" ]
@@ -155,9 +155,9 @@ function check_env(){
             read -e -p "build tools prefix [$DEFAULT]: "  USER_INPUT
             BUILD_TOOLS_PREFIX="${USER_INPUT:-$DEFAULT}"
         fi
-    fi
 
-    check_tools
+        check_tools
+    fi
 
     if ! [ -f "$DEBUG_ID" ]
     then
@@ -179,7 +179,7 @@ function sanitize_dir {
 
 function check_tools {
     local EXPECTED_TOOLS=(
-    	gcc 
+    	gcc
     	g++
     	gdb
     )
@@ -211,11 +211,11 @@ function check_tools {
 function write_workspace(){
     THUNDER_TOOLCHAIN=""
     THUNDER_INSTALL_TARGET_PREFIX=""
-    
+
     if [[ -f $TOOLCHAIN_FILE ]]
     then
         THUNDER_TOOLCHAIN="\"CMAKE_TOOLCHAIN_FILE\":\"${TOOLCHAIN_FILE}\","
-    elif [[ -f "${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}g++" ]] && 
+    elif [[ -f "${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}g++" ]] &&
          [[ -f "${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc" ]]
     then
         THUNDER_TOOLCHAIN="\"CMAKE_C_COMPILER\":\"${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc\","
@@ -237,7 +237,7 @@ function write_vscode_workspace(){
     local timestamp=`date +'%s'`
     local tmpws="${timestamp}-Thunder.code-workspace"
     local ws=${USER}-Thunder.code-workspace
-    
+
     sed \
         -e "s|@THUNDER_TOOLCHAIN@|${THUNDER_TOOLCHAIN}|g" \
         -e "s|@THUNDER_INSTALL_LOCATION@|${INSTALL_LOCATION}|g" \
@@ -254,7 +254,7 @@ function write_vscode_workspace(){
     if [[ -f ${ws} ]]
     then
     	DIFF=`diff ${ws} ${tmpws}`
-        
+
         if [[ "x${DIFF}" != "x" ]]
         then
            diff -Nau --color ${ws} ${tmpws}
@@ -265,23 +265,23 @@ function write_vscode_workspace(){
     else
     	WRITE=Y
     fi
-    
-    case $WRITE in  
+
+    case $WRITE in
         y|Y)
-            echo "Writing ${ws}" 
+            echo "Writing ${ws}"
 	    cp ${tmpws} ${ws}
-            ;; 
-        *) 
-            echo "Keeping existing workspace ${ws}." 
-            ;; 
+            ;;
+        *)
+            echo "Keeping existing workspace ${ws}."
+            ;;
     esac
-    
+
     rm ${tmpws}
 }
 
 function write_cache() {
     echo "Writing build environment cache"
-    
+
     echo "#GENERATED FILE, DO NOT EDIT" > .cache
     echo "BUILD_TYPE=\"$BUILD_TYPE\"" >> .cache
     echo "ROOT_LOCATION=\"$ROOT_LOCATION\"" >> .cache
@@ -326,17 +326,17 @@ function show_env(){
     echo " - Toolchain location:    ${BUILD_TOOLS_LOCATION}"
     echo " - Toolchain prefix:      ${BUILD_TOOLS_PREFIX}"
     fi
-} 
+}
 
 
 function main() {
     POSITIONAL=()
     INSTALL_ONLY="N"
     WRITE="N"
-    
+
     # silence the install
     STDOUT="/dev/null"
-    
+
     # Initialize variables
     DEBUG_ID=""
     BUILD_TOOLS_LOCATION=""
@@ -347,19 +347,17 @@ function main() {
     TOOLS_LOCATION=""
     TOOLCHAIN_FILE=""
     SYS_ROOT=""
-    
+
     # only if the path exists in sources dir
     PREINSTALL_COMPONENTS=(
-    	Thunder/Tools 
+    	Thunder/Tools
     	libprovision
     	ThunderUI
     )
-    
+
     read_cache
 
     parse_args $@ && check_env && pre-install && write_workspace && write_cache
-
-    #true
 }
 
 main $@
