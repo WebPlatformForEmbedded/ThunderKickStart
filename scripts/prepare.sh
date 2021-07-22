@@ -81,17 +81,27 @@ function cmake-install(){
         fi
     fi
 
-    cmake -Hsource/$1 -Bbuild/${1///} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${TOOLS_LOCATION} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION} &> $STDOUT
-    cmake --build build/${1///} --target install &> $STDOUT
+    cmake -Hsource/${1} -Bbuild/${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION} &> $STDOUT
+    cmake --build build/${2} --target install &> $STDOUT
 }
 
 function pre-install(){
-    for c in "${PREINSTALL_COMPONENTS[@]}"
+    # only if the path exists in sources dir
+    # <path>:<build dir>:<install location>
+    PREINSTALL_COMPONENTS=(
+    	"Thunder/Tools:ThunderTools:${TOOLS_LOCATION}"
+    	"libprovision:libprovision:${INSTALL_LOCATION}"
+    	"ThunderUI:ThunderUI:${INSTALL_LOCATION}"
+    )
+
+    for entry in "${PREINSTALL_COMPONENTS[@]}"
     do
-    	if [[ -d source/$c ]]
+        IFS=':' read -r source_dir build_dir dest_dir <<< ${entry}
+
+    	if [[ -d source/$source_dir ]]
     	then
-    	   echo "Installing $c... "
-    	   cmake-install $c
+    	   echo "Installing ${source_dir} to $dest_dir... "
+    	   cmake-install ${source_dir} ${build_dir} ${dest_dir}
     	fi
     done
 
@@ -328,7 +338,6 @@ function show_env(){
     fi
 }
 
-
 function main() {
     POSITIONAL=()
     INSTALL_ONLY="N"
@@ -347,13 +356,6 @@ function main() {
     TOOLS_LOCATION=""
     TOOLCHAIN_FILE=""
     SYS_ROOT=""
-
-    # only if the path exists in sources dir
-    PREINSTALL_COMPONENTS=(
-    	Thunder/Tools
-    	libprovision
-    	ThunderUI
-    )
 
     read_cache
 
