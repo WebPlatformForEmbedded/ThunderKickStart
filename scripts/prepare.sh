@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # set -x
+log_levels=(MESSAGE ERROR INFO DEBUG)
 
 function print_usage() {
     echo "Usage:"
@@ -10,10 +11,11 @@ function print_usage() {
     echo " -c --cmake-toolchain-file <file>  Specify toolchain file for cmake"
     echo " -d --debug-id <ssh id>            Location of a predefined rsa key for ssh"
     echo " -i --install-location <path>      Location to install binaries"
-    echo " -l --log                          Log installation to file \"install-log\""
+    echo " -l --log <file>                   Log to <file>"
     echo " -o --only-install                 Only pre-install predefined components"
     echo " -r --root-location <path>         Location to use as a project root"
     echo " -t --tools-location <path>        Location to install the Thunder tools/generators"
+    echo " -v                                Print log on screen, add more v's to increase level"
     echo " -h --help                         Help"
 }
 
@@ -37,7 +39,12 @@ function parse_args(){
               shift # past value
               ;;
             -l|--log)
-              STDOUT="install-log"
+              LOG="$2"
+              if [[ -n "${LOG}" ]]
+              then
+                echo "Run $(date)" > $LOG
+              fi
+              shift
               ;;
             -o|--only-install)
               INSTALL_ONLY="Y"
@@ -49,6 +56,16 @@ function parse_args(){
             -t|--tools-location)
               TOOLS_LOCATION="$2"
               shift # past value
+              ;;
+            -v*)
+              local ulevel="${1//[^v]}"
+
+              ((VERBOSE=VERBOSE+${#ulevel}))
+
+              if [[ ${VERBOSE} -gt ${#log_levels[@]} ]]
+              then
+                ((VERBOSE=${#log_levels[@]}-1))
+              fi
               ;;
             -h|--help)
               print_usage
@@ -63,6 +80,7 @@ function parse_args(){
     done
     set -- "${POSITIONAL[@]}" # restore positional parameters
 
+    log DEBUG "Verbosity set to "${log_levels[${VERBOSE}]}""
 }
 
 function cmake-install(){
@@ -81,8 +99,11 @@ function cmake-install(){
         fi
     fi
 
-    cmake -Hsource/${1} -Bbuild/${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION} &> $STDOUT
-    cmake --build build/${2} --target install &> $STDOUT
+    build_output=$(cmake -Hsource/${1} -Bbuild/${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION}  2>&1)
+    log INFO "${build_output}"
+
+    install_output=$(cmake --build build/${2} --target install 2>&1)
+    log INFO "${install_output}"
 }
 
 function pre-install(){
@@ -100,7 +121,7 @@ function pre-install(){
 
     	if [[ -d source/$source_dir ]]
     	then
-    	   echo "Installing ${source_dir} to $dest_dir... "
+    	   log MESSAGE "Installing ${source_dir} to $dest_dir... "
     	   cmake-install ${source_dir} ${build_dir} ${dest_dir}
     	fi
     done
@@ -200,22 +221,17 @@ function check_tools {
 
         if [[ "x${VERSION}" = "x" ]]
         then
-            echo ""
-            echo "ERROR: Missing $TOOL."
-            echo ""
+            log ERROR "Missing $TOOL."
             false
         else
-            echo ""
-            echo "Found ${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}${TOOL}."
-            echo "${VERSION}."
-            echo ""
+            log INFO "Found ${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}${TOOL}.\n${VERSION}."
         fi
     done
 
     SYS_ROOT=$(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -print-sysroot)
 
     IFS='-' read -r TARGET_ARCH LEFTOVER <<< $(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -dumpmachine)
-    echo "TARGET_ARCH ${TARGET_ARCH}"
+    log DEBUG "TARGET_ARCH ${TARGET_ARCH}"
 }
 
 function write_workspace(){
@@ -278,11 +294,11 @@ function write_vscode_workspace(){
 
     case $WRITE in
         y|Y)
-            echo "Writing ${ws}"
-	    cp ${tmpws} ${ws}
+            log MESSAGE "Writing ${ws}"
+            cp ${tmpws} ${ws}
             ;;
         *)
-            echo "Keeping existing workspace ${ws}."
+            log MESSAGE "Keeping existing workspace ${ws}."
             ;;
     esac
 
@@ -290,7 +306,7 @@ function write_vscode_workspace(){
 }
 
 function write_cache() {
-    echo "Writing build environment cache"
+    log DEBUG "Writing build environment cache"
 
     echo "#GENERATED FILE, DO NOT EDIT" > .cache
     echo "BUILD_TYPE=\"$BUILD_TYPE\"" >> .cache
@@ -308,7 +324,7 @@ function write_cache() {
 function read_cache() {
     if [[ -f .cache ]]
     then
-        echo "Reading cached build environment"
+        log DEBUG "Reading cached build environment"
         source .cache
     fi
 }
@@ -316,25 +332,54 @@ function read_cache() {
 function show_env(){
     read_cache
 
-    echo "Build environment:"
-    echo " - Type:                  ${BUILD_TYPE}"
-    echo " - Project root location: ${ROOT_LOCATION}"
-    echo " - Install location       ${INSTALL_LOCATION}"
-    echo " - Thunder tools:         ${TOOLS_LOCATION}"
+    local message="Build environment:\n"
+    message+=" - Type:                  ${BUILD_TYPE}\n"
+    message+=" - Project root location: ${ROOT_LOCATION}\n"
+    message+=" - Install location       ${INSTALL_LOCATION}\n"
+    message+=" - Thunder tools:         ${TOOLS_LOCATION}\n"
     if [ "x$DEBUG_ID" != "x" ]
     then
-        echo " - Debug id:              ${DEBUG_ID}"
-        echo "   usage on target:"
-        echo "   ssh-copy-id -i  ${DEBUG_ID}.pub <user>@<target-ip>"
+        message+=" - Debug id:              ${DEBUG_ID}\n"
+        message+="   usage on target:\n"
+        message+="   ssh-copy-id -i  ${DEBUG_ID}.pub <user>@<target-ip>\n"
     fi
     if [[ -f $TOOLCHAIN_FILE ]]
     then
-    echo " - CMake toolchain file:  ${TOOLCHAIN_FILE}"
+    message+=" - CMake toolchain file:  ${TOOLCHAIN_FILE}\n"
     fi
     if [[ -d $BUILD_TOOLS_LOCATION ]]
     then
-    echo " - Toolchain location:    ${BUILD_TOOLS_LOCATION}"
-    echo " - Toolchain prefix:      ${BUILD_TOOLS_PREFIX}"
+    message+=" - Toolchain location:    ${BUILD_TOOLS_LOCATION}\n"
+    message+=" - Toolchain prefix:      ${BUILD_TOOLS_PREFIX}\n"
+    fi
+
+    log MESSAGE "${message}"
+}
+
+function log() {
+    local level=-1
+
+    for l in "${!log_levels[@]}"
+    do
+        if [[ "${log_levels[$l]}" == "${1^^}" ]]
+        then
+            level=$l
+        fi
+    done
+
+    if [[ $level -ge 0 ]]
+    then
+        shift # past value
+
+        if [[ $level -le $VERBOSE ]]
+        then
+            echo -e "${@}"
+        fi
+
+        if [[ -n "${LOG}" ]]
+        then
+            echo -e "${@}\n" >> "${LOG}"
+        fi
     fi
 }
 
@@ -342,9 +387,8 @@ function main() {
     POSITIONAL=()
     INSTALL_ONLY="N"
     WRITE="N"
-
-    # silence the install
-    STDOUT="/dev/null"
+    VERBOSE=1
+    LOG=""
 
     # Initialize variables
     DEBUG_ID=""
