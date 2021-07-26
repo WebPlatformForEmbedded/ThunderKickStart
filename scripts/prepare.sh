@@ -6,7 +6,7 @@ function print_usage() {
     echo "Usage:"
     echo "$(basename "${0}") [options]"
     echo ""
-    echo "options:"
+    echo "Options:"
     echo " -b --build <type>                 Build Type [Debug/DebugOptimized/ReleaseSymbols/Release/Production]"
     echo " -c --cmake-toolchain-file <file>  Specify toolchain file for cmake"
     echo " -d --debug-id <ssh id>            Location of a predefined rsa key for ssh"
@@ -15,8 +15,12 @@ function print_usage() {
     echo " -o --only-install                 Only pre-install predefined components"
     echo " -r --root-location <path>         Location to use as a project root"
     echo " -t --tools-location <path>        Location to install the Thunder tools/generators"
-    echo " -v                                Print log on screen, add more v's to increase level"
-    echo " -h --help                         Help"
+    echo ""
+    echo "Script options"
+    echo " -V                                Print log on screen, add more V's to increase level"
+    echo " -C --clear-cache                  Clear the cache for a fresh start"
+    echo " -S --show-environment             Show the current environment from cache"
+    echo " -h --help                         Show this message"
 }
 
 function parse_args(){
@@ -57,8 +61,8 @@ function parse_args(){
               TOOLS_LOCATION="$2"
               shift # past value
               ;;
-            -v*)
-              local ulevel="${1//[^v]}"
+            -V*)
+              local ulevel="${1//[^V]}"
 
               ((VERBOSE=VERBOSE+${#ulevel}))
 
@@ -66,6 +70,18 @@ function parse_args(){
               then
                 ((VERBOSE=${#log_levels[@]}-1))
               fi
+              ;;
+            -C|--clear-cache)
+              if [[ -f .cache ]]
+              then
+                rm .cache
+                reset-cache
+              fi
+              ;;
+            -R|--read-cache)
+              show_env
+              false
+              return
               ;;
             -h|--help)
               print_usage
@@ -406,13 +422,7 @@ function log() {
     fi
 }
 
-function main() {
-    POSITIONAL=()
-    INSTALL_ONLY="N"
-    WRITE="N"
-    VERBOSE=1
-    LOG=""
-
+function reset-cache() {
     # Initialize variables
     DEBUG_ID=""
     BUILD_TOOLS_LOCATION=""
@@ -423,10 +433,29 @@ function main() {
     TOOLS_LOCATION=""
     TOOLCHAIN_FILE=""
     SYS_ROOT=""
+}
+
+function main() {
+    POSITIONAL=()
+    INSTALL_ONLY="N"
+    WRITE="N"
+    VERBOSE=1
+    LOG=""
 
     read_cache
 
     parse_args $@ && check_env && pre-install && write_workspace && write_cache
 }
+
+# Initialize global variables
+DEBUG_ID=""
+BUILD_TOOLS_LOCATION=""
+BUILD_TOOLS_PREFIX="NOT_SET"
+BUILD_TYPE=""
+ROOT_LOCATION=""
+INSTALL_LOCATION=""
+TOOLS_LOCATION=""
+TOOLCHAIN_FILE=""
+SYS_ROOT=""
 
 main $@
