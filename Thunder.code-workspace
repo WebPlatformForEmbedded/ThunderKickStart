@@ -18,10 +18,10 @@
 			"recommendations": ["ms-vscode.cpptools-extension-pack"]
 		},
 		// If you want to use remote debugging change this to your target needs
-		"thunder.remoteTargetPublicKey":"@THUNDER_DEBUG_ID@",
+		"thunder.remoteTargetID":"@THUNDER_DEBUG_ID@",
 		"thunder.remoteTargetUser":"root",
 		"thunder.remoteTargetHost":"<target-ip>",
-		"thunder.remoteDebugPort":"55550",
+		"thunder.remoteTargetDebugPort":"55550",
 		// The settings below are generated change them with caution
 		"thunder.installPath":"@THUNDER_INSTALL_LOCATION@",
 		"thunder.projectRoot":"@THUNDER_PROJECT_ROOT_LOCATION@",
