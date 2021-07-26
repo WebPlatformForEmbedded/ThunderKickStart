@@ -270,7 +270,7 @@ function check_tools {
     local TOOL_GCC="${BUILD_TOOLS_LOCATION}/${BUILD_TOOLS_PREFIX}gcc"
 
     SYS_ROOT=$(${TOOL_GCC} -print-sysroot)
-    log MESSAGE "SYS_ROOT ${SYS_ROOT}"
+    log DEBUG "SYS_ROOT ${SYS_ROOT}"
 }
 
 function write_workspace(){
