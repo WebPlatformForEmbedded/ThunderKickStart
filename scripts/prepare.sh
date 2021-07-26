@@ -99,10 +99,12 @@ function cmake-install(){
         fi
     fi
 
-    build_output=$(cmake -Hsource/${1} -Bbuild/${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION}  2>&1)
+    log DEBUG "CMake Install\n - source dir: '${1}'\n - build dir '${2}'\n - install prefix: '${3}'"
+
+    build_output=$(cmake -H${1} -B${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION}  2>&1)
     log INFO "${build_output}"
 
-    install_output=$(cmake --build build/${2} --target install 2>&1)
+    install_output=$(cmake --build ${2} --target install 2>&1)
     log INFO "${install_output}"
 }
 
@@ -122,7 +124,7 @@ function pre-install(){
     	if [[ -d source/$source_dir ]]
     	then
     	   log MESSAGE "Installing ${source_dir} to $dest_dir... "
-    	   cmake-install ${source_dir} ${build_dir} ${dest_dir}
+    	   cmake-install "source/${source_dir}" "build/${build_dir}" "${dest_dir}"
     	fi
     done
 
@@ -138,7 +140,7 @@ function check_env(){
     if [ "x$BUILD_TYPE" = "x" ]
     then
     	DEFAULT="Debug"
-        read -e -p "Set Build type [$DEFAULT]: " USER_INPUT
+        read -e -p "Build type [$DEFAULT]: " USER_INPUT
         BUILD_TYPE="${USER_INPUT:-$DEFAULT}"
     fi
 
@@ -159,31 +161,61 @@ function check_env(){
     if [ "x$TOOLS_LOCATION" = "x" ]
     then
     	DEFAULT=${ROOT_LOCATION}/host-tools
-        read -e -p "Thunder host tools install location[$DEFAULT]: " USER_INPUT
+        read -e -p "Thunder host tools install location [$DEFAULT]: " USER_INPUT
         TOOLS_LOCATION="${USER_INPUT:-$DEFAULT}"
     fi
 
     if [ "x$TOOLCHAIN_FILE" = "x" ]
     then
         DEFAULT="N"
-        read -e -p "Use Toolchain File?: " USER_INPUT
+        read -e -p "Toolchain File (optional): " USER_INPUT
         TOOLCHAIN_FILE="${USER_INPUT:-$DEFAULT}"
     fi
 
-    if ! [[ -f $TOOLCHAIN_FILE ]]
+    if [[ -f $TOOLCHAIN_FILE ]]
     then
-        echo "No toolchain file."
+        log MESSAGE "read $TOOLCHAIN_FILE"
+        local build="/tmp/thunder_setup_$(date +'%s')"
+        local script=$(realpath ${0})
+        local script_root=$(dirname ${script})
+
+        mkdir $build
+
+        cmake-install "$script_root/cmake" "$build" "$build"
+
+        if [[ -f "$build/cmake-environment" ]]
+        then
+            source "$build/cmake-environment"
+
+            local prefix=$(basename "${_CXX_COMPILER}")
+            local tool="${prefix##*-}"
+
+            BUILD_TOOLS_LOCATION=$(dirname "${_CXX_COMPILER}")
+            BUILD_TOOLS_PREFIX="${prefix%${tool}}"
+
+            log DEBUG "BUILD_TOOLS_LOCATION: ${BUILD_TOOLS_LOCATION}"
+            log DEBUG "BUILD_TOOLS_PREFIX: ${BUILD_TOOLS_PREFIX}"
+
+            check_tools
+        else
+            BUILD_TOOLS_LOCATION="<NOT_FOUND>"
+            BUILD_TOOLS_PREFIX="<NOT_FOUND>"
+            SYS_ROOT="<NOT_FOUND>"
+        fi
+
+        rm -rf "$build"
+    else
         if [ "x$BUILD_TOOLS_LOCATION" = "x" ]
         then
             DEFAULT="/usr/bin/"
-            read -e -p "toolchain build tools location [$DEFAULT]:"  USER_INPUT
+            read -e -p "Build tools location [$DEFAULT]:"  USER_INPUT
             BUILD_TOOLS_LOCATION="${USER_INPUT:-$DEFAULT}"
         fi
 
         if [ "x$BUILD_TOOLS_PREFIX" = "xNOT_SET" ]
         then
             DEFAULT=""
-            read -e -p "build tools prefix [$DEFAULT]: "  USER_INPUT
+            read -e -p "Build tools prefix [$DEFAULT]: "  USER_INPUT
             BUILD_TOOLS_PREFIX="${USER_INPUT:-$DEFAULT}"
         fi
 
@@ -199,15 +231,6 @@ function check_env(){
 
 }
 
-function sanitize_dir {
-    if [[ -d $1 ]]
-    then
-        local dir=$(realpath "$1")
-        dir+=/
-        echo $dir
-    fi
-}
-
 function check_tools {
     local EXPECTED_TOOLS=(
     	gcc
@@ -217,21 +240,21 @@ function check_tools {
 
     for TOOL in "${EXPECTED_TOOLS[@]}"
     do
-        VERSION=$(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}${TOOL} --version)
+        VERSION=$(${BUILD_TOOLS_LOCATION}/${BUILD_TOOLS_PREFIX}${TOOL} --version)
 
         if [[ "x${VERSION}" = "x" ]]
         then
-            log ERROR "Missing $TOOL."
+            log ERROR "Missing $TOOL.\n"
             false
         else
-            log INFO "Found ${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}${TOOL}.\n${VERSION}."
+            log INFO "Found ${BUILD_TOOLS_LOCATION}/${BUILD_TOOLS_PREFIX}${TOOL}.\n${VERSION}.\n"
         fi
     done
 
-    SYS_ROOT=$(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -print-sysroot)
+    local TOOL_GCC="${BUILD_TOOLS_LOCATION}/${BUILD_TOOLS_PREFIX}gcc"
 
-    IFS='-' read -r TARGET_ARCH LEFTOVER <<< $(${BUILD_TOOLS_LOCATION}${BUILD_TOOLS_PREFIX}gcc -dumpmachine)
-    log DEBUG "TARGET_ARCH ${TARGET_ARCH}"
+    SYS_ROOT=$(${TOOL_GCC} -print-sysroot)
+    log MESSAGE "SYS_ROOT ${SYS_ROOT}"
 }
 
 function write_workspace(){
@@ -349,8 +372,8 @@ function show_env(){
     fi
     if [[ -d $BUILD_TOOLS_LOCATION ]]
     then
-    message+=" - Toolchain location:    ${BUILD_TOOLS_LOCATION}\n"
-    message+=" - Toolchain prefix:      ${BUILD_TOOLS_PREFIX}\n"
+    message+=" - Tools location:        ${BUILD_TOOLS_LOCATION}\n"
+    message+=" - Tools prefix:          ${BUILD_TOOLS_PREFIX}\n"
     fi
 
     log MESSAGE "${message}"
