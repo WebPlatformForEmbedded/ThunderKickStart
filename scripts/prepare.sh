@@ -117,10 +117,16 @@ function cmake-install(){
 
     log DEBUG "CMake Install\n - source dir: '${1}'\n - build dir '${2}'\n - install prefix: '${3}'"
 
-    build_output=$(cmake -H${1} -B${2} $THUNDER_TOOLCHAIN -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} -DCMAKE_INSTALL_PREFIX=${3} -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION}  2>&1)
+    build_output=`sh -c "cmake \
+        -S ${1} -B ${2} \
+        --no-warn-unused-cli \
+        ${THUNDER_TOOLCHAIN} \
+        -DCMAKE_MODULE_PATH=${TOOLS_LOCATION} \
+        -DCMAKE_INSTALL_PREFIX=${3} \
+        -DGENERIC_CMAKE_MODULE_PATH=${TOOLS_LOCATION}" 2>&1`
     log INFO "${build_output}"
 
-    install_output=$(cmake --build ${2} --target install 2>&1)
+    install_output=`cmake --build ${2} --target install 2>&1`
     log INFO "${install_output}"
 }
 
@@ -242,7 +248,7 @@ function check_env(){
     then
         ssh-keygen -q -t rsa -b 4096 -C "thunder@debug.access" -N "" -f "$ROOT_LOCATION/thunder-debug-access"
         DEBUG_ID="$ROOT_LOCATION/thunder-debug-access"
-        echo "Generated Debug SSH ID \'$ROOT_LOCATION/thunder-debug-access\'"
+        log MESSAGE "Generated Debug SSH ID '$ROOT_LOCATION/thunder-debug-access'"
     fi
 
 }
@@ -299,9 +305,12 @@ function write_workspace(){
 }
 
 function write_vscode_workspace(){
+    local tf=Thunder.code-workspace
     local timestamp=`date +'%s'`
-    local tmpws="${timestamp}-Thunder.code-workspace"
-    local ws=${USER}-Thunder.code-workspace
+    local tmpws="${timestamp}-${tf}"
+    local ws=${USER}-${tf}
+
+    local template=`find -name ${tf}`
 
     sed \
         -e "s|@THUNDER_TOOLCHAIN@|${THUNDER_TOOLCHAIN}|g" \
@@ -314,7 +323,7 @@ function write_vscode_workspace(){
         -e "s|@BUILD_TOOLS_LOCATION@|${BUILD_TOOLS_LOCATION}|g" \
         -e "s|@SYS_ROOT@|${SYS_ROOT}|g" \
         -e "s|@THUNDER_DEBUG_ID@|${DEBUG_ID}|g" \
-        source/workspaces/Thunder.code-workspace > ${tmpws}
+        ${template} > ${tmpws}
 
     if [[ -f ${ws} ]]
     then
@@ -323,7 +332,7 @@ function write_vscode_workspace(){
         if [[ "x${DIFF}" != "x" ]]
         then
            diff -Nau --color ${ws} ${tmpws}
-           echo "Found existing workspace [${ws}]"
+           log MESSAGE "Found existing workspace [${ws}]"
            read  -p "Overwrite this workspace? (y/N) " WRITE
            WRITE=${WRITE:-N}
         fi
