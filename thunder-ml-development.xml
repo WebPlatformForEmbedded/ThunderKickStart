@@ -8,4 +8,10 @@
         path="source/ThunderNanoServicesRDK" 
         revision="refs/heads/master">
     </project>
+
+    <project name="ThunderLibraries" 
+        remote="WebPlatformForEmbedded" 
+        path="source/ThunderLibraries" 
+        revision="refs/heads/main">
+    </project>
 </manifest>
