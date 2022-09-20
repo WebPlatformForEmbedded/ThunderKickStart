@@ -246,7 +246,7 @@ function check_env(){
 
     if ! [ -f "$DEBUG_ID" ]
     then
-        ssh-keygen -q -t rsa -b 4096 -C "thunder@debug.access" -N "" -f "$ROOT_LOCATION/thunder-debug-access"
+        ssh-keygen -q -t ed25519 -C "thunder@debug.access" -N "" -f "$ROOT_LOCATION/thunder-debug-access"
         DEBUG_ID="$ROOT_LOCATION/thunder-debug-access"
         log MESSAGE "Generated Debug SSH ID '$ROOT_LOCATION/thunder-debug-access'"
     fi
@@ -390,6 +390,7 @@ function show_env(){
         message+=" - Debug id:              ${DEBUG_ID}\n"
         message+="   usage on target:\n"
         message+="   ssh-copy-id -i  ${DEBUG_ID}.pub <user>@<target-ip>\n"
+        message+="   ssh <user>@<target-ip> 'mkdir -p $HOME/.ssh && ln -vsf /etc/dropbear/authorized_keys $HOME/.ssh/authorized_keys'\n"
     fi
     if [[ -f $TOOLCHAIN_FILE ]]
     then
