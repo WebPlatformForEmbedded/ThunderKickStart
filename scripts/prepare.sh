@@ -390,7 +390,7 @@ function show_env(){
         message+=" - Debug id:              ${DEBUG_ID}\n"
         message+="   usage on target:\n"
         message+="   ssh-copy-id -i  ${DEBUG_ID}.pub <user>@<target-ip>\n"
-        message+="   ssh <user>@<target-ip> 'mkdir -p $HOME/.ssh && ln -vsf /etc/dropbear/authorized_keys $HOME/.ssh/authorized_keys'\n"
+        message+="   ssh <user>@<target-ip> 'mkdir -p \$HOME/.ssh && ln -vsf /etc/dropbear/authorized_keys \$HOME/.ssh/authorized_keys'\n"
     fi
     if [[ -f $TOOLCHAIN_FILE ]]
     then
