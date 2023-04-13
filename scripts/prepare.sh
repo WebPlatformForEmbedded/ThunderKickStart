@@ -117,6 +117,9 @@ function cmake-install(){
 
     log DEBUG "CMake Install\n - source dir: '${1}'\n - build dir '${2}'\n - install prefix: '${3}'"
 
+
+    #cmake-install "source/${source_dir}" "build/${build_dir}" "${dest_dir}"
+
     build_output=`sh -c "cmake \
         -S ${1} -B ${2} \
         --no-warn-unused-cli \
@@ -134,9 +137,9 @@ function pre-install(){
     # only if the path exists in sources dir
     # <path>:<build dir>:<install location>
     PREINSTALL_COMPONENTS=(
-    	"Thunder/Tools:ThunderTools:${TOOLS_LOCATION}"
+    	"ThunderTools:ThunderTools:${TOOLS_LOCATION}"
     	"libprovision:libprovision:${INSTALL_LOCATION}"
-    	"ThunderUI:ThunderUI:${INSTALL_LOCATION}"
+    	"ThunderUI:ThunderUI:${INSTALL_LOCATION}/usr"
     )
 
     for entry in "${PREINSTALL_COMPONENTS[@]}"
