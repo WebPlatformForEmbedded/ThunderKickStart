@@ -13,7 +13,12 @@
         remote="RDKCentral" 
         path="source/Thunder" 
         revision="refs/heads/master">
-        <linkfile src="Tools" dest="source/Tools"/>
+    </project>
+
+    <project name="ThunderTools" 
+        remote="RDKCentral" 
+        path="source/ThunderTools" 
+        revision="refs/heads/master">
     </project>
 
     <project name="ThunderInterfaces" 
